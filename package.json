@@ -1,9 +1,14 @@
 {
-  "name": "electron-routes",
-  "version": "1.3.0",
+  "name": "routeron",
+  "version": "0.0.0",
+  "description": "Router for Electron",
   "main": "src/index.js",
   "typings": "index.d.ts",
-  "author": "Samuel Attard <samuel.r.attard@gmail.com>",
+  "keywords": [
+    "Router",
+    "Electron"
+  ],
+  "author": "Rishabh Mishra <me@rishabhmishra.dev> (https://rishabhmishra.dev)",
   "license": "MIT",
   "dependencies": {
     "path-to-regexp": "^1.6.0",
@@ -13,9 +18,17 @@
     "start": "electron example/main.js"
   },
   "devDependencies": {
-    "electron": "^1.4.4",
+    "electron": "^3.1.10",
     "eslint": "^3.8.1",
     "eslint-config-airbnb-base": "^9.0.0",
     "eslint-plugin-import": "^2.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rishabh09/electron-routes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rishabh09/electron-routes/issues"
+  },
+  "homepage": "https://github.com/rishabh09/electron-routes#readme"
 }
