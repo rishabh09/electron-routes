@@ -1,5 +1,5 @@
 import pathToRegexp, {Key} from 'path-to-regexp';
-import { Methods, PathHandler, MethodName } from './types';
+import { Methods, PathHandler, MethodName, RouteHandler, RequestHandler } from './types';
 
 class MiniRouter {
   public _methods: Methods;
@@ -47,57 +47,83 @@ class MiniRouter {
   public delete(pathMatch: string, callback: PathHandler): void {
     this.request('delete', pathMatch, callback);
   }
-  
-  use(pathMatch: string, mRouter) {
+
+  public use(pathMatch: string | PathHandler | MiniRouter, mRouter?: MiniRouter | PathHandler): void {
     const keys: Key[] = [];
+    if (typeof pathMatch !== 'string') {
+      mRouter = pathMatch;
+      pathMatch = '';
+    }
+
     pathMatch = pathMatch.replace(/^\//g, '');
-    const use = {
+
+    const use: RouteHandler = {
       pathComponent: pathMatch,
       pathRegexp: pathToRegexp(pathMatch, keys, { end: false }),
       pathKeys: keys,
     };
-    if (mRouter.constructor === MiniRouter) {
+
+    if (mRouter instanceof MiniRouter) {
       use.router = mRouter;
     } else if (typeof mRouter === 'function') {
       use.callback = mRouter;
     } else {
-      throw new Error('You can only use a router or a function');
+      throw new Error('You can only use a Router or a function');
     }
     this._methods.use.push(use);
   }
 
-  processRequest(path: string, method, handlers) {
+  protected processRequest(path: string, method: MethodName): RequestHandler[] {
+    // Unknown method
+    if (!this._methods[method.toLowerCase() as MethodName]) {
+      return [];
+    }
+
+    const handlers: RequestHandler[] = [];
     path = path.replace(/^\//g, '');
-    const testHandler = (tHandler) => {
+
+    const testHandler = (tHandler: RouteHandler): void => {
       const tPathMatches = tHandler.pathRegexp.exec(path);
+
       if (tPathMatches) {
-        const params = {};
-        tHandler.pathKeys.forEach((pathKey, index) => {
-          params[pathKey.name] = tPathMatches[index + 1];
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const params: any = {};
+        tHandler.pathKeys.forEach(
+          ({ name }, index: number): void => {
+            params[name] = tPathMatches[index + 1];
+          }
+        );
         handlers.push({
           params,
-          fn: tHandler.callback,
+          fn: tHandler.callback!,
         });
       }
     };
-    this._methods.use.filter(u => !!u.callback).forEach(testHandler);
+
+    this._methods.use.filter(u => Boolean(u.callback)).forEach(testHandler);
+    //@ts-ignore
     this._methods[method.toLowerCase()].forEach(testHandler);
-    this._methods.use.filter(u => !!u.router).forEach((tHandler) => {
-      const tUseMatches = tHandler.pathRegexp.exec(path);
-      if (tUseMatches) {
-        const useHandlers = [];
-        const params = {};
-        tHandler.pathKeys.forEach((pathKey, index) => {
-          params[pathKey.name] = tUseMatches[index + 1];
-        });
-        tHandler.router.processRequest(path.replace(tUseMatches[0], ''), method, useHandlers);
-        useHandlers.forEach((tUseHandler) => {
-          tUseHandler.params = Object.assign({}, params, tUseHandler.params);
-          handlers.push(tUseHandler);
-        });
-      }
-    });
+    this._methods.use
+      .filter(u => Boolean(u.router))
+      .forEach(tHandler => {
+        const tUseMatches = tHandler.pathRegexp.exec(path);
+
+        if (tUseMatches) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const params: any = {};
+          tHandler.pathKeys.forEach(({ name }, index) => {
+            params[name] = tUseMatches[index + 1];
+          });
+          const useHandlers = tHandler.router!.processRequest(path.replace(tUseMatches[0], ''), method);
+
+          useHandlers.forEach(tUseHandler => {
+            tUseHandler.params = { ...params, ...tUseHandler.params };
+            handlers.push(tUseHandler);
+          });
+        }
+      });
+
+    return handlers;
   }
 }
 

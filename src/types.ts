@@ -1,4 +1,5 @@
 import { Key } from "path-to-regexp";
+import MiniRouter from "./MiniRouter";
 
 export type PathHandler = (
   request: any,
@@ -19,6 +20,13 @@ export interface RouteHandler {
   pathRegexp: RegExp;
   pathKeys: Key[];
   callback?: PathHandler;
+  router?: MiniRouter
 }
 
-export type MethodName = Exclude<keyof Methods, 'use'>;
+
+export type MethodName = keyof Methods;
+
+export interface RequestHandler {
+  params: any;
+  fn: PathHandler;
+}
