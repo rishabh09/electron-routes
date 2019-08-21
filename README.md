@@ -1,10 +1,9 @@
-# electron-router
+# routeron
 
-[![Build Status](https://travis-ci.org/MarshallOfSound/electron-router.svg?branch=master)](https://travis-ci.org/MarshallOfSound/electron-router)
-[![npm version](https://badge.fury.io/js/%40marshallofsound%2Felectron-router.svg)](https://badge.fury.io/js/%40marshallofsound%2Felectron-router)
-[![npm](https://img.shields.io/npm/dm/electron-routes.svg)](https://www.npmjs.com/package/electron-routes)
-[![license](https://img.shields.io/github/license/MarshallOfSound/electron-router.svg?maxAge=2592000)](https://github.com/MarshallOfSound/electron-router/blob/master/LICENSE)
-![status](https://img.shields.io/badge/Status-%20Ready%20for%20Awesome-red.svg)
+
+[![npm version](https://badge.fury.io/js/routeron.svg)](https://badge.fury.io/js/routeron)
+[![npm](https://img.shields.io/npm/dm/routeron.svg)](https://www.npmjs.com/package/routeron)
+![GitHub](https://img.shields.io/github/license/rishabh09/routeron)
 
 Use an Express style API that you know and love without the security concerns and hassle of making it
 work inside Electron.
@@ -12,7 +11,7 @@ work inside Electron.
 ## Install
 
 ```
-$ npm install --save electron-routes
+$ npm install --save routeron
 ```
 
 ## Usage
