@@ -1,12 +1,19 @@
-const { app, protocol, session } = require('electron'); // eslint-disable-line
-const MiniRouter = require('./MiniRouter');
-const { WritableStreamBuffer } = require('stream-buffers');
+import { app, protocol, session } from 'electron';
+import MiniRouter from './MiniRouter';
+import { WritableStreamBuffer } from 'stream-buffers';
 
-const schemes = [];
+interface Global extends NodeJS.Global {
+  __router_schemes__ : string[]
+}
+
+declare var global: Global;
+
+const schemes: string[] = [];
 global.__router_schemes__ = schemes;
 
 class Router extends MiniRouter {
-  constructor(schemeName = 'app', partitionKey) {
+  public schemeName: string;
+  constructor(schemeName = 'app', partitionKey: string) {
     if (app.isReady()) {
       throw new Error('Router must be initialized before the app is ready');
     }
