@@ -113,4 +113,4 @@ class Router extends MiniRouter {
   }
 }
 
-module.exports = Router;
+export default Router;

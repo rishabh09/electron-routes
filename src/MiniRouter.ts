@@ -1,6 +1,8 @@
-const pathToRegexp = require('path-to-regexp');
+import pathToRegexp from 'path-to-regexp';
 
 class MiniRouter {
+  public _methods: any
+
   constructor() {
     this._methods = {
       get: [],
@@ -85,4 +87,4 @@ class MiniRouter {
   }
 }
 
-module.exports = MiniRouter;
+export default MiniRouter;
