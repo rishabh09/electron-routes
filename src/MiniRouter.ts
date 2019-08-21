@@ -1,9 +1,10 @@
-import pathToRegexp from 'path-to-regexp';
+import pathToRegexp, {Key} from 'path-to-regexp';
+import { Methods, PathHandler, MethodName } from './types';
 
 class MiniRouter {
-  public _methods: any
+  public _methods: Methods;
 
-  constructor() {
+  public constructor() {
     this._methods = {
       get: [],
       post: [],
@@ -11,31 +12,44 @@ class MiniRouter {
       delete: [],
       use: [],
     };
-
-    Object.keys(this._methods).forEach((method) => {
-      if (method === 'use') return;
-      this[method] = (pathMatch, callback) => {
-        pathMatch = pathMatch.replace(/^\//g, '');
-        const keys = [];
-        this._methods[method].push({
-          pathComponent: pathMatch,
-          pathRegexp: pathToRegexp(pathMatch, keys),
-          pathKeys: keys,
-          callback,
-        });
-      };
-    });
   }
 
-  all(pathMatch, callback) {
+  public all(pathMatch: string, callback: PathHandler): void {
     this.get(pathMatch, callback);
     this.post(pathMatch, callback);
     this.put(pathMatch, callback);
     this.delete(pathMatch, callback);
   }
 
-  use(pathMatch, mRouter) {
-    const keys = [];
+  public request(method: MethodName, pathMatch: string, callback: PathHandler): void {
+    pathMatch = pathMatch.replace(/^\//g, '');
+    const keys: Key[] = [];
+    this._methods[method].push({
+      pathComponent: pathMatch,
+      pathRegexp: pathToRegexp(pathMatch, keys),
+      pathKeys: keys,
+      callback,
+    });
+  }
+
+  public get(pathMatch: string, callback: PathHandler): void {
+    this.request('get', pathMatch, callback);
+  }
+
+  public post(pathMatch: string, callback: PathHandler): void {
+    this.request('post', pathMatch, callback);
+  }
+
+  public put(pathMatch: string, callback: PathHandler): void {
+    this.request('put', pathMatch, callback);
+  }
+
+  public delete(pathMatch: string, callback: PathHandler): void {
+    this.request('delete', pathMatch, callback);
+  }
+  
+  use(pathMatch: string, mRouter) {
+    const keys: Key[] = [];
     pathMatch = pathMatch.replace(/^\//g, '');
     const use = {
       pathComponent: pathMatch,
@@ -52,7 +66,7 @@ class MiniRouter {
     this._methods.use.push(use);
   }
 
-  processRequest(path, method, handlers) {
+  processRequest(path: string, method, handlers) {
     path = path.replace(/^\//g, '');
     const testHandler = (tHandler) => {
       const tPathMatches = tHandler.pathRegexp.exec(path);
