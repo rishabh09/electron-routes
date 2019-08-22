@@ -11,7 +11,9 @@
   "author": "Rishabh Mishra <me@rishabhmishra.dev> (https://rishabhmishra.dev)",
   "license": "MIT",
   "dependencies": {
+    "mime": "^2.4.4",
     "path-to-regexp": "^1.6.0",
+    "query-string": "^6.8.2",
     "stream-buffers": "^3.0.1"
   },
   "scripts": {
@@ -19,6 +21,7 @@
     "start": "electron example/main.js"
   },
   "devDependencies": {
+    "@types/mime": "^2.0.1",
     "@types/node": "^12.7.2",
     "@types/stream-buffers": "^3.0.3",
     "electron": "^3.1.10",

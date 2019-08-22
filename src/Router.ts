@@ -1,123 +1,135 @@
-import { app, protocol, session } from 'electron';
-import MiniRouter from './MiniRouter';
-import { WritableStreamBuffer } from 'stream-buffers';
+import pathToRegexp, { Key as RegexKey } from 'path-to-regexp';
 
-interface Global extends NodeJS.Global {
-  __router_schemes__ : string[]
-}
+import { Methods, PathHandler, RequestHandler, RouteHandler, MethodName } from './types';
 
-declare var global: Global;
 
-const schemes: string[] = [];
-global.__router_schemes__ = schemes;
+export class Router {
+  public _methods: Methods;
 
-class Router extends MiniRouter {
-  public schemeName: string;
-  constructor(schemeName = 'app', partitionKey: string) {
-    if (app.isReady()) {
-      throw new Error('Router must be initialized before the app is ready');
-    }
-    if (schemes.includes(schemeName)) {
-      throw new Error(`Reusing router schemes is not allowed, there is already a scheme registed called ${schemeName}`);
-    }
-    super();
-    this.schemeName = schemeName;
-    schemes.push(schemeName);
-    protocol.registerStandardSchemes([schemeName]);
-    app.on('ready', () => {
-      let mProtocol = protocol;
-      if (partitionKey) {
-        mProtocol = session.fromPartition(partitionKey).protocol;
-      }
-      mProtocol.registerBufferProtocol(schemeName, this._handle.bind(this));
+  public constructor() {
+    this._methods = {
+      get: [],
+      post: [],
+      put: [],
+      delete: [],
+      use: [],
+    };
+  }
+
+  public all(pathMatch: string, callback: PathHandler): void {
+    this.get(pathMatch, callback);
+    this.post(pathMatch, callback);
+    this.put(pathMatch, callback);
+    this.delete(pathMatch, callback);
+  }
+
+  public request(method: MethodName, pathMatch: string, callback: PathHandler): void {
+    pathMatch = pathMatch.replace(/^\//g, '');
+    const keys: RegexKey[] = [];
+    this._methods[method].push({
+      pathComponent: pathMatch,
+      pathRegexp: pathToRegexp(pathMatch, keys),
+      pathKeys: keys,
+      callback,
     });
   }
 
-  _nicePost(uploadData) { // eslint-disable-line
-    return uploadData.map((data) => {
-      if (data.bytes && data.bytes.toString) {
-        data.stringContent = () => data.bytes.toString();
-        data.json = () => JSON.parse(data.stringContent());
-      }
-      return data;
-    });
+  public get(pathMatch: string, callback: PathHandler): void {
+    this.request('get', pathMatch, callback);
   }
 
-  _handle(request, cb) {
-    const callback = (data, mimeType) => {
-      mimeType = mimeType || 'text/html';
-      if (typeof data === 'string') {
-        data = Buffer.from(data);
-      }
-      cb({
-        mimeType,
-        data,
-      });
+  public post(pathMatch: string, callback: PathHandler): void {
+    this.request('post', pathMatch, callback);
+  }
+
+  public put(pathMatch: string, callback: PathHandler): void {
+    this.request('put', pathMatch, callback);
+  }
+
+  public delete(pathMatch: string, callback: PathHandler): void {
+    this.request('delete', pathMatch, callback);
+  }
+
+  // Overload types
+  public use(pathMatch: string, mRouter: Router | PathHandler): void;
+
+  public use(mRouter: PathHandler | Router): void;
+
+  public use(pathMatch: string | PathHandler | Router, mRouter?: Router | PathHandler): void {
+    const keys: RegexKey[] = [];
+    if (typeof pathMatch !== 'string') {
+      mRouter = pathMatch;
+      pathMatch = '';
+    }
+
+    pathMatch = pathMatch.replace(/^\//g, '');
+
+    const use: RouteHandler = {
+      pathComponent: pathMatch,
+      pathRegexp: pathToRegexp(pathMatch, keys, { end: false }),
+      pathKeys: keys,
     };
 
-    const { url, referrer, method, uploadData } = request;
-    const path = url.substr(this.schemeName.length + 3);
-    const handlers = [];
-    this.processRequest(path, method, handlers);
-    if (handlers.length === 0) {
-      callback({
-        error: -6,
-      });
+    if (mRouter instanceof Router) {
+      use.router = mRouter;
+    } else if (typeof mRouter === 'function') {
+      use.callback = mRouter;
     } else {
-      let calledBack = false;
-      // Move out of scope so it can be mutated
-      const req = {
-        params: {},
-        method,
-        referrer,
-        uploadData: this._nicePost(uploadData || []),
-        url: request.url,
-        headers: {},
-      };
-      const attemptHandler = (index) => {
-        const tHandler = handlers[index];
-        req.params = tHandler.params;
-        const called = fn => (...args) => {
-          if (calledBack) throw new Error('Already callled back');
-          calledBack = true;
-          fn(...args);
-        };
-
-        const res = new WritableStreamBuffer({ initialSize: 1024 * 1024, incrementAmount: 10 * 1024 });
-        const originalEnd = res.end.bind(res);
-        Object.assign(res, {
-          json: called(o => callback(JSON.stringify(o))),
-          send: called((s, m) => callback(s, m)),
-          notFound: called(() => callback({ error: -6 })),
-          end: called((data, ...args) => {
-            originalEnd(data, ...args);
-            if (typeof data === 'string') {
-              callback(data);
-            } else if (data instanceof Buffer) {
-              callback(data);
-            } else if (res.getContentsAsString('utf8').length > 0) {
-              callback(res.getContentsAsString('utf8'));
-            } else {
-              callback('');
-            }
-          }),
-          setHeader: () => undefined,
-          getHeader: () => undefined,
-        });
-
-        const next = () => {
-          if (calledBack) throw new Error('Can\'t call next once data has already been sent as a response');
-          if (index + 1 < handlers.length) {
-            attemptHandler(index + 1);
-          } else {
-            res.notFound();
-          }
-        };
-        tHandler.fn(req, res, next);
-      };
-      attemptHandler(0);
+      throw new Error('You can only use a Router or a function');
     }
+
+    this._methods.use.push(use);
+  }
+
+  protected processRequest(path: string, method: string): RequestHandler[] {
+    // Unknown method
+    //@ts-ignore
+    if (!this._methods[method.toLowerCase()]) {
+      return [];
+    }
+
+    const handlers: RequestHandler[] = [];
+    path = path.replace(/^\//g, '');
+
+    const testHandler = (tHandler: RouteHandler): void => {
+      const tPathMatches = tHandler.pathRegexp.exec(path);
+
+      if (tPathMatches) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const params: any = {};
+        tHandler.pathKeys.forEach(({ name }, index: number): void => {
+          params[name] = tPathMatches[index + 1];
+        });
+        handlers.push({
+          params,
+          fn: tHandler.callback!,
+        });
+      }
+    };
+
+    this._methods.use.filter(u => Boolean(u.callback)).forEach(testHandler);
+    //@ts-ignore
+    this._methods[method.toLowerCase()].forEach(testHandler);
+    this._methods.use
+      .filter(u => Boolean(u.router))
+      .forEach(tHandler => {
+        const tUseMatches = tHandler.pathRegexp.exec(path);
+
+        if (tUseMatches) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const params: any = {};
+          tHandler.pathKeys.forEach(({ name }, index) => {
+            params[name] = tUseMatches[index + 1];
+          });
+          const useHandlers = tHandler.router!.processRequest(path.replace(tUseMatches[0], ''), method);
+
+          useHandlers.forEach(tUseHandler => {
+            tUseHandler.params = { ...params, ...tUseHandler.params };
+            handlers.push(tUseHandler);
+          });
+        }
+      });
+
+    return handlers;
   }
 }
-
-export default Router;
