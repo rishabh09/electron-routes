@@ -70,6 +70,7 @@ export class ElectronResponse {
       data = new StringStream(data, { encoding });
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     this.callback({
       headers: this.headers,

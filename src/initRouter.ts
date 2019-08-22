@@ -1,16 +1,17 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import { app, protocol, remote } from 'electron';
 
 import { routeron } from './index';
 import { SuperRouter } from './SuperRouter';
 
 interface Global extends NodeJS.Global {
-  __router_schemes__ : string[]
-  'super-router': SuperRouter
+  __router_schemes__: string[];
+  'super-router': SuperRouter;
 }
 
-declare var global: Global;
+declare let global: Global;
 
-export function initRouter(schemeName: string = 'app'): SuperRouter {
+export function initRouter(schemeName = 'app'): SuperRouter {
   global['__router_schemes__'] = [schemeName];
   let mainRouter: SuperRouter;
   if (remote) {

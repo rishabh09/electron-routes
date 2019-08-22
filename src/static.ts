@@ -23,7 +23,7 @@ const getPath = async (path_: string): Promise<string> => {
 };
 
 export function electronStatic(rootDir: string): PathHandler {
-  return async function(req, res, next) {
+  return async function(req, res, next): Promise<void> {
     const filePath = join(rootDir, req.url);
     const resolvedPath = await getPath(filePath);
 

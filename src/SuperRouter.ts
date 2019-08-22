@@ -3,7 +3,7 @@ import queryString from 'query-string';
 
 import { ElectronResponse } from './Response';
 import { Router } from './Router';
-import { ElectronRequest, EnhancedUploadData, RequestHandler } from './types';
+import { ElectronRequest, EnhancedUploadData, RequestHandler, AnyJson } from './types';
 
 const electronApp = app || remote.app;
 const electronSession = session || remote.session;
@@ -12,8 +12,8 @@ function enhanceUploadData(uploadData: UploadData[]): EnhancedUploadData[] {
   return uploadData.map((data: UploadData) => {
     const enhancedData: EnhancedUploadData = {...data, stringContent: null, json: null}
     if (data.bytes && data.bytes.toString) {
-      enhancedData.stringContent = () => data.bytes.toString();
-      enhancedData.json = () => enhancedData.stringContent && JSON.parse(enhancedData.stringContent());
+      enhancedData.stringContent = (): string => data.bytes.toString();
+      enhancedData.json = (): AnyJson => enhancedData.stringContent && JSON.parse(enhancedData.stringContent());
     }
     return enhancedData;
   });
@@ -32,14 +32,16 @@ export class SuperRouter extends Router {
   }
 
   private registerScheme(): void {
-    electronSession.defaultSession!.protocol.unregisterProtocol(this.scheme);
-    electronSession.defaultSession!.protocol.registerStreamProtocol(
+    if (electronSession.defaultSession) {
+    electronSession.defaultSession.protocol.unregisterProtocol(this.scheme);
+    electronSession.defaultSession.protocol.registerStreamProtocol(
       this.scheme,
       this._handle.bind(this),
       (error: Error) => {
         if (error) throw error;
       }
     );
+    }
   }
 
   public reset(): void {
@@ -87,7 +89,7 @@ export class SuperRouter extends Router {
           }
         };
 
-        tHandler.fn(req, res, next);
+        tHandler.fn && tHandler.fn(req, res, next);
       };
 
       attemptHandler(0);

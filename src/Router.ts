@@ -83,6 +83,7 @@ export class Router {
 
   protected processRequest(path: string, method: string): RequestHandler[] {
     // Unknown method
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     //@ts-ignore
     if (!this._methods[method.toLowerCase()]) {
       return [];
@@ -102,12 +103,13 @@ export class Router {
         });
         handlers.push({
           params,
-          fn: tHandler.callback!,
+          fn: tHandler.callback,
         });
       }
     };
 
     this._methods.use.filter(u => Boolean(u.callback)).forEach(testHandler);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     //@ts-ignore
     this._methods[method.toLowerCase()].forEach(testHandler);
     this._methods.use
@@ -121,9 +123,9 @@ export class Router {
           tHandler.pathKeys.forEach(({ name }, index) => {
             params[name] = tUseMatches[index + 1];
           });
-          const useHandlers = tHandler.router!.processRequest(path.replace(tUseMatches[0], ''), method);
+          const useHandlers = tHandler.router && tHandler.router.processRequest(path.replace(tUseMatches[0], ''), method);
 
-          useHandlers.forEach(tUseHandler => {
+          useHandlers && useHandlers.forEach(tUseHandler => {
             tUseHandler.params = { ...params, ...tUseHandler.params };
             handlers.push(tUseHandler);
           });

@@ -2,13 +2,18 @@ import { remote } from 'electron';
 
 import { Router } from './Router';
 
+interface Global extends NodeJS.Global {
+  Router: Router;
+}
+
+declare let global: Global;
+
 export default function routeron(): Router {
   const globalRouter = remote && remote.getGlobal('Router');
   if (!globalRouter) {
-    // @ts-ignore
-    global.Router = Router;
-    // @ts-ignore
-    return new Router();
+    const router = new Router()
+    global.Router = router;
+    return router;
   } else {
     return new globalRouter();
   }

@@ -18,12 +18,15 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "electron example/main.js"
+    "start": "electron example/main.js",
+    "test": "eslint src/**"
   },
   "devDependencies": {
     "@types/mime": "^2.0.1",
     "@types/node": "^12.7.2",
     "@types/stream-buffers": "^3.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
     "electron": "^3.1.10",
     "eslint": "^6.2.1",
     "eslint-config-airbnb-base": "^9.0.0",

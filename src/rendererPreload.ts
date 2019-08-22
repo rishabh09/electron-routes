@@ -6,10 +6,8 @@ export default function rendererPreload(): void {
   }
 
   // Electron <=4
-  // @ts-ignore
   if (webFrame.registerURLSchemeAsPrivileged) {
     remote.getGlobal('__router_schemes__').forEach((schemeName: string) =>
-      // @ts-ignore
       webFrame.registerURLSchemeAsPrivileged(schemeName)
     );
   }

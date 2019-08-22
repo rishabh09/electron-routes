@@ -5,6 +5,7 @@ import { ElectronResponse } from './Response';
 import { Router } from './Router';
 import { ParsedQuery } from 'query-string';
 
+
 export type PathHandler = (
   request: ElectronRequest,
   response: ElectronResponse,
@@ -13,7 +14,7 @@ export type PathHandler = (
 
 export interface RequestHandler {
   params: any;
-  fn: PathHandler;
+  fn: PathHandler | undefined;
 }
 
 export interface ElectronRequest {
@@ -51,5 +52,6 @@ export interface Methods {
 }
 
 export type AnyJson =  boolean | number | string | null | JsonArray | JsonMap;
-interface JsonMap {  [key: string]: AnyJson; }
+interface JsonMap {  [key: string]: AnyJson }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface JsonArray extends Array<AnyJson> {}
