@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc",
     "start": "electron example/main.js",
-    "test": "eslint src/**"
+    "test": "eslint src/**",
+    "postversion": "git push --tags"
   },
   "devDependencies": {
     "@types/mime": "^2.0.1",
