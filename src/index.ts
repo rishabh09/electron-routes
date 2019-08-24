@@ -1,6 +1,5 @@
-import routeron from './routeron';
-import { Router } from './Router';
-import { initRouter } from './initRouter';
-import { electronStatic } from './static';
+import routeron from "./routeron";
+import { Router } from "./Router";
+import { electronStatic } from "./static";
 
-export { Router, initRouter, electronStatic, routeron };
+export { Router, electronStatic, routeron };

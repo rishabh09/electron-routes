@@ -14,3 +14,12 @@ work inside Electron.
 $ npm install --save routeron
 ```
 
+## Instruction
+
+1. `initRouter` on main process file
+
+`main.js`
+
+```js
+const router = routeron(schemeName); // optional param schemaName, default `app`
+```
