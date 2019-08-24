@@ -10,7 +10,7 @@ interface Global extends NodeJS.Global {
 
 declare let global: Global;
 
-function initRouter(schemeName: string = "app"): SuperRouter {
+function initRouter(schemeName = "app"): SuperRouter {
   let mainRouter: SuperRouter;
   const globalRouter = global["super-router"];
   if (globalRouter) {
@@ -22,6 +22,7 @@ function initRouter(schemeName: string = "app"): SuperRouter {
         protocol.registerStandardSchemes([schemeName], { secure: true });
       } else {
         // Electron >=5
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         //@ts-ignore
         protocol.registerSchemesAsPrivileged([
           {
