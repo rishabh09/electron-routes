@@ -3,18 +3,17 @@ import { Router } from "./Router";
 import { SuperRouter } from "./SuperRouter";
 
 interface Global extends NodeJS.Global {
-  Router: Router;
+  Router: any;
   __router_schemes__: string[];
   "super-router": SuperRouter;
 }
 
 declare let global: Global;
 
-function initRouter(schemeName = "app"): SuperRouter {
+export function initRouter(schemeName = "app"): SuperRouter {
   let mainRouter: SuperRouter;
-  const globalRouter = global["super-router"];
-  if (globalRouter) {
-    return globalRouter;
+  if (remote) {
+    mainRouter = remote.getGlobal("super-router");
   } else {
     if (!app.isReady()) {
       if (protocol.registerStandardSchemes) {
@@ -38,25 +37,18 @@ function initRouter(schemeName = "app"): SuperRouter {
     }
     mainRouter = new SuperRouter(schemeName);
     global["super-router"] = mainRouter;
-    return mainRouter;
+    routeron();
   }
+  return mainRouter;
 }
 
-function getRouter(): Router {
+export default function routeron(): Router {
   const globalRouter = remote && remote.getGlobal("Router");
   if (!globalRouter) {
+    global.Router = Router;
     const router = new Router();
-    global.Router = router;
     return router;
   } else {
     return new globalRouter();
-  }
-}
-
-export default function routeron(schemeName?: string): Router {
-  if (remote) {
-    return getRouter();
-  } else {
-    return initRouter(schemeName);
   }
 }
