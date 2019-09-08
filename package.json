@@ -12,7 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "mime": "^2.4.4",
-    "path-to-regexp": "^1.6.0",
+    "path-to-regexp": "^3.1.0",
     "query-string": "^6.8.2",
     "stream-buffers": "^3.0.1"
   },
@@ -30,8 +30,8 @@
     "@typescript-eslint/parser": "^2.0.0",
     "electron": "^4.2.10",
     "eslint": "^6.2.1",
-    "eslint-config-airbnb-base": "^9.0.0",
-    "eslint-plugin-import": "^2.0.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
     "typescript": "^3.5.3"
   },
   "repository": {
